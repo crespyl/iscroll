@@ -1,4 +1,3 @@
-
 function IScroll (el, options) {
 	this.wrapper = typeof el == 'string' ? document.querySelector(el) : el;
 	this.scroller = this.wrapper.children[0];
@@ -6,11 +5,17 @@ function IScroll (el, options) {
 
 	this.options = {
 
-// INSERT POINT: OPTIONS 
+// INSERT POINT: OPTIONS
 
 		startX: 0,
 		startY: 0,
 		scrollY: true,
+
+		// Only used if options.snap is defined, setting snapX or snapY to false
+		// will prevent snapping in that axis
+		snapX: true,
+		snapY: true,
+
 		directionLockThreshold: 5,
 		momentum: true,
 
@@ -57,7 +62,7 @@ function IScroll (el, options) {
 
 // INSERT POINT: NORMALIZATION
 
-	// Some defaults	
+	// Some defaults
 	this.x = 0;
 	this.y = 0;
 	this.directionX = 0;

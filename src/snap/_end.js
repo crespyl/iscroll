@@ -1,4 +1,3 @@
-
 		if ( this.options.snap ) {
 			var snap = this._nearestSnap(newX, newY);
 			this.currentPage = snap;
@@ -7,10 +6,15 @@
 						Math.min(Math.abs(newX - snap.x), 1000),
 						Math.min(Math.abs(newY - snap.y), 1000)
 					), 300);
-			newX = snap.x;
-			newY = snap.y;
 
-			this.directionX = 0;
-			this.directionY = 0;
-			easing = this.options.bounceEasing;
+			if ( this.options.snapX ) {
+				newX = snap.x;
+				this.directionY = 0;
+			}
+			if ( this.options.snapY ) {
+				newY = snap.y;
+				this.directionX = 0;
+			}
+
+			//easing = this.options.bounceEasing;
 		}

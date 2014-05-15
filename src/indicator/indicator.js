@@ -1,4 +1,3 @@
-
 function createDefaultScrollbar (direction, interactive, type) {
 	var scrollbar = document.createElement('div'),
 		indicator = document.createElement('div');
@@ -210,10 +209,19 @@ Indicator.prototype = {
 					), 300);
 
 			if ( this.scroller.x != snap.x || this.scroller.y != snap.y ) {
-				this.scroller.directionX = 0;
-				this.scroller.directionY = 0;
+				if ( this.scroller.options.snapX ) {
+					this.scroller.directionX = 0;
+				}
+				if ( this.scroller.options.snapY ) {
+					this.scroller.directionY = 0;
+				}
 				this.scroller.currentPage = snap;
-				this.scroller.scrollTo(snap.x, snap.y, time, this.scroller.options.bounceEasing);
+				this.scroller.scrollTo(
+                                                       ( this.scroller.options.snapX ? snap.x : this.scroller.x ),
+                                                       ( this.scroller.options.snapY ? snap.y : this.scroller.y ),
+                                                       time,
+                                                       this.scroller.options.bounceEasing
+                                                      );
 			}
 		}
 
@@ -291,7 +299,7 @@ Indicator.prototype = {
 				this.maxBoundaryX = this.maxPosX;
 			}
 
-			this.sizeRatioX = this.options.speedRatioX || (this.scroller.maxScrollX && (this.maxPosX / this.scroller.maxScrollX));	
+			this.sizeRatioX = this.options.speedRatioX || (this.scroller.maxScrollX && (this.maxPosX / this.scroller.maxScrollX));
 		}
 
 		if ( this.options.listenY ) {

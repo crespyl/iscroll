@@ -1,4 +1,3 @@
-
 	_initWheel: function () {
 		utils.addEvent(this.wrapper, 'wheel', this);
 		utils.addEvent(this.wrapper, 'mousewheel', this);
@@ -57,24 +56,33 @@
 		}
 
 		if ( this.options.snap ) {
-			newX = this.currentPage.pageX;
-			newY = this.currentPage.pageY;
+			if ( this.options.snapX ) {
+				newX = this.currentPage.pageX;
 
-			if ( wheelDeltaX > 0 ) {
-				newX--;
-			} else if ( wheelDeltaX < 0 ) {
-				newX++;
+				if ( wheelDeltaX > 0 ) {
+					newX--;
+				} else if ( wheelDeltaX < 0 ) {
+					newX++;
+				}
+			}
+			if ( this.options.snapY ) {
+				newY = this.currentPage.pageY;
+
+				if ( wheelDeltaY > 0 ) {
+					newY--;
+				} else if ( wheelDeltaY < 0 ) {
+					newY++;
+				}
 			}
 
-			if ( wheelDeltaY > 0 ) {
-				newY--;
-			} else if ( wheelDeltaY < 0 ) {
-				newY++;
+			if ( this.options.snapX && this.options.snapY ) {
+				this.goToPage(newX, newY);
+				return;
+			} else if ( this.options.snapX ) {
+				newX = ( this.pages[newX][newY] ? this.pages[newX][newY].x : this.x );
+			} else if ( this.options.snapY ) {
+				newY = ( this.pages[newX][newY] ? this.pages[newX][newY].y : this.y );
 			}
-
-			this.goToPage(newX, newY);
-
-			return;
 		}
 
 		newX = this.x + Math.round(this.hasHorizontalScroll ? wheelDeltaX : 0);
