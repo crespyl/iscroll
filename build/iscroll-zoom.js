@@ -234,7 +234,6 @@ var utils = (function () {
 
 	return me;
 })();
-
 function IScroll (el, options) {
 	this.wrapper = typeof el == 'string' ? document.querySelector(el) : el;
 	this.scroller = this.wrapper.children[0];
@@ -251,11 +250,17 @@ function IScroll (el, options) {
 
 		snapThreshold: 0.334,
 
-// INSERT POINT: OPTIONS 
+// INSERT POINT: OPTIONS
 
 		startX: 0,
 		startY: 0,
 		scrollY: true,
+
+		// Only used if options.snap is defined, setting snapX or snapY to false
+		// will prevent snapping in that axis
+		snapX: true,
+		snapY: true,
+
 		directionLockThreshold: 5,
 		momentum: true,
 
@@ -308,7 +313,7 @@ function IScroll (el, options) {
 
 // INSERT POINT: NORMALIZATION
 
-	// Some defaults	
+	// Some defaults
 	this.x = 0;
 	this.y = 0;
 	this.directionX = 0;
@@ -582,7 +587,6 @@ IScroll.prototype = {
 			this.isInTransition = 1;
 		}
 
-
 		if ( this.options.snap ) {
 			var snap = this._nearestSnap(newX, newY);
 			this.currentPage = snap;
@@ -591,13 +595,19 @@ IScroll.prototype = {
 						Math.min(Math.abs(newX - snap.x), 1000),
 						Math.min(Math.abs(newY - snap.y), 1000)
 					), 300);
-			newX = snap.x;
-			newY = snap.y;
 
-			this.directionX = 0;
-			this.directionY = 0;
-			easing = this.options.bounceEasing;
+			if ( this.options.snapX ) {
+				newX = snap.x;
+				this.directionY = 0;
+			}
+			if ( this.options.snapY ) {
+				newY = snap.y;
+				this.directionX = 0;
+			}
+
+			//easing = this.options.bounceEasing;
 		}
+
 
 // INSERT POINT: _end
 
@@ -1180,7 +1190,6 @@ IScroll.prototype = {
 
 		this.zoom(deltaScale, e.pageX, e.pageY, 0);
 	},
-
 	_initWheel: function () {
 		utils.addEvent(this.wrapper, 'wheel', this);
 		utils.addEvent(this.wrapper, 'mousewheel', this);
@@ -1239,24 +1248,33 @@ IScroll.prototype = {
 		}
 
 		if ( this.options.snap ) {
-			newX = this.currentPage.pageX;
-			newY = this.currentPage.pageY;
+			if ( this.options.snapX ) {
+				newX = this.currentPage.pageX;
 
-			if ( wheelDeltaX > 0 ) {
-				newX--;
-			} else if ( wheelDeltaX < 0 ) {
-				newX++;
+				if ( wheelDeltaX > 0 ) {
+					newX--;
+				} else if ( wheelDeltaX < 0 ) {
+					newX++;
+				}
+			}
+			if ( this.options.snapY ) {
+				newY = this.currentPage.pageY;
+
+				if ( wheelDeltaY > 0 ) {
+					newY--;
+				} else if ( wheelDeltaY < 0 ) {
+					newY++;
+				}
 			}
 
-			if ( wheelDeltaY > 0 ) {
-				newY--;
-			} else if ( wheelDeltaY < 0 ) {
-				newY++;
+			if ( this.options.snapX && this.options.snapY ) {
+				this.goToPage(newX, newY);
+				return;
+			} else if ( this.options.snapX ) {
+				newX = ( this.pages[newX][newY] ? this.pages[newX][newY].x : this.x );
+			} else if ( this.options.snapY ) {
+				newY = ( this.pages[newX][newY] ? this.pages[newX][newY].y : this.y );
 			}
-
-			this.goToPage(newX, newY);
-
-			return;
 		}
 
 		newX = this.x + Math.round(this.hasHorizontalScroll ? wheelDeltaX : 0);
@@ -1278,7 +1296,6 @@ IScroll.prototype = {
 
 // INSERT POINT: _wheel
 	},
-
 	_initSnap: function () {
 		this.currentPage = {};
 
@@ -1374,19 +1391,18 @@ IScroll.prototype = {
 			}
 		});
 
-		this.on('flick', function () {
-			var time = this.options.snapSpeed || Math.max(
-					Math.max(
-						Math.min(Math.abs(this.x - this.startX), 1000),
-						Math.min(Math.abs(this.y - this.startY), 1000)
-					), 300);
-
-			this.goToPage(
-				this.currentPage.pageX + this.directionX,
-				this.currentPage.pageY + this.directionY,
-				time
-			);
-		});
+		//this.on('flick', function () {
+		//      var time = this.options.snapSpeed || Math.max(
+		//			Math.max(
+		//				Math.min(Math.abs(this.x - this.startX), 1000),
+		//				Math.min(Math.abs(this.y - this.startY), 1000)
+		//			), 300);
+		//	this.goToPage(
+		//		this.currentPage.pageX + this.directionX,
+		//		this.currentPage.pageY + this.directionY,
+		//		time
+		//	);
+		//});
 	},
 
 	_nearestSnap: function (x, y) {
@@ -1743,8 +1759,7 @@ IScroll.prototype = {
 		}
 	}
 
-};
-function createDefaultScrollbar (direction, interactive, type) {
+};function createDefaultScrollbar (direction, interactive, type) {
 	var scrollbar = document.createElement('div'),
 		indicator = document.createElement('div');
 
@@ -1955,10 +1970,19 @@ Indicator.prototype = {
 					), 300);
 
 			if ( this.scroller.x != snap.x || this.scroller.y != snap.y ) {
-				this.scroller.directionX = 0;
-				this.scroller.directionY = 0;
+				if ( this.scroller.options.snapX ) {
+					this.scroller.directionX = 0;
+				}
+				if ( this.scroller.options.snapY ) {
+					this.scroller.directionY = 0;
+				}
 				this.scroller.currentPage = snap;
-				this.scroller.scrollTo(snap.x, snap.y, time, this.scroller.options.bounceEasing);
+				this.scroller.scrollTo(
+                                                       ( this.scroller.options.snapX ? snap.x : this.scroller.x ),
+                                                       ( this.scroller.options.snapY ? snap.y : this.scroller.y ),
+                                                       time,
+                                                       this.scroller.options.bounceEasing
+                                                      );
 			}
 		}
 
@@ -2036,7 +2060,7 @@ Indicator.prototype = {
 				this.maxBoundaryX = this.maxPosX;
 			}
 
-			this.sizeRatioX = this.options.speedRatioX || (this.scroller.maxScrollX && (this.maxPosX / this.scroller.maxScrollX));	
+			this.sizeRatioX = this.options.speedRatioX || (this.scroller.maxScrollX && (this.maxPosX / this.scroller.maxScrollX));
 		}
 
 		if ( this.options.listenY ) {
